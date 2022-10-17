@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/justmiles/go-confluence"
+	"github.com/quinyx-tjeerd/go-confluence"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"

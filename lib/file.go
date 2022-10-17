@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/justmiles/go-confluence"
+	"github.com/quinyx-tjeerd/go-confluence"
 )
 
 // MarkdownFile contains information about the file to upload
