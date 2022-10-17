@@ -71,8 +71,12 @@ func (f *MarkdownFile) Upload(m *Markdown2Confluence) (urlPath string, err error
 		return urlPath, fmt.Errorf("Error checking for existing page: %s", err)
 	}
 
-	if len(f.Parents) > 0 {
-		ancestorID, err = f.FindOrCreateAncestors(m)
+	if f.Ancestor != "" {
+		ancestorID = f.Ancestor
+	}
+	if f.Ancestor == "" && len(f.Parents) > 0 {
+		// ancestorID, err = f.FindOrCreateAncestors(m)
+		ancestorID, err = f.FindAncestors(m)
 		if err != nil {
 			return urlPath, err
 		}
@@ -148,11 +152,25 @@ func (f *MarkdownFile) FindOrCreateAncestors(m *Markdown2Confluence) (ancestorID
 	return ancestorID, nil
 }
 
+// FindAncestors creates an empty page to represent a local "folder" name
+func (f *MarkdownFile) FindAncestors(m *Markdown2Confluence) (ancestorID string, err error) {
+
+	for _, parent := range f.Parents {
+		ancestorID, err = f.FindAncestor(m, m.client, ancestorID, parent, false)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Return the last ancestorID
+	return ancestorID, nil
+}
+
 // ParentIndex caches parent page Ids for futures reference
 var ParentIndex = make(map[string]string)
 
 // FindOrCreateAncestor creates an empty page to represent a local "folder" name
-func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *confluence.Client, ancestorID, parent string) (string, error) {
+func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *confluence.Client, ancestorID, parent string, create bool = true) (string, error) {
 	if parent == "" {
 		return "", nil
 	}
@@ -181,30 +199,34 @@ func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *conf
 		return content.ID, err
 	}
 
-	// if parent page does not exist, create it
-	bp := confluence.CreateContentBodyParameters{}
-	bp.Title = parent
-	bp.Type = "page"
-	bp.Space.Key = m.Space
-	bp.Body.Storage.Representation = "storage"
-	bp.Body.Storage.Value = defaultAncestorPage
-
-	if m.Debug {
-		fmt.Printf("Creating parent page '%s' with ancestor id %s\n", bp.Title, ancestorID)
+	if create {
+		// if parent page does not exist, create it
+		bp := confluence.CreateContentBodyParameters{}
+		bp.Title = parent
+		bp.Type = "page"
+		bp.Space.Key = m.Space
+		bp.Body.Storage.Representation = "storage"
+		bp.Body.Storage.Value = defaultAncestorPage
+		
+		if m.Debug {
+			fmt.Printf("Creating parent page '%s' with ancestor id %s\n", bp.Title, ancestorID)
+		}
+		
+		if ancestorID != "" {
+			bp.Ancestors = append(bp.Ancestors, Ancestor{
+				ID: ancestorID,
+			})
+		}
+		
+		content, err := client.CreateContent(&bp, nil)
+		if err != nil {
+			return "", fmt.Errorf("Error creating parent page %s for %s: %s", f.Path, bp.Title, err)
+		}
+		ParentIndex[parent] = content.ID
+		return content.ID, nil
 	}
-
-	if ancestorID != "" {
-		bp.Ancestors = append(bp.Ancestors, Ancestor{
-			ID: ancestorID,
-		})
-	}
-
-	content, err := client.CreateContent(&bp, nil)
-	if err != nil {
-		return "", fmt.Errorf("Error creating parent page %s for %s: %s", f.Path, bp.Title, err)
-	}
-	ParentIndex[parent] = content.ID
-	return content.ID, nil
+	// if parent page does not exist, return empty string
+	return "", nil
 }
 
 // Ancestor TODO: move this to go-confluence api

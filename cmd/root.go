@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	lib "github.com/justmiles/go-markdown2confluence/lib"
+	lib "github.com/quinyx-tjeerd/go-markdown2confluence/lib"
 
 	"github.com/spf13/cobra"
 )

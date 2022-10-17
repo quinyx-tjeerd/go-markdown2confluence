@@ -5,13 +5,13 @@ Push markdown files to Confluence Cloud
 ## Installation
 
 Download the [latest
-release](https://github.com/justmiles/go-markdown2confluence/releases)
+release](https://github.com/quinyx-tjeerd/go-markdown2confluence/releases)
 and add the binary in your local `PATH`
 
 - Linux
 
   ```shell
-  curl -LO https://github.com/justmiles/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_linux_x86_64.tar.gz
+  curl -LO https://github.com/quinyx-tjeerd/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_linux_x86_64.tar.gz
 
   sudo tar -xzvf go-markdown2confluence_3.3.2_linux_x86_64.tar.gz -C /usr/local/bin/ markdown2confluence
   ```
@@ -19,14 +19,14 @@ and add the binary in your local `PATH`
 - OSX
 
   ```shell
-  curl -LO https://github.com/justmiles/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_darwin_x86_64.tar.gz
+  curl -LO https://github.com/quinyx-tjeerd/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_darwin_x86_64.tar.gz
 
   sudo tar -xzvf go-markdown2confluence_3.3.2_darwin_x86_64.tar.gz -C /usr/local/bin/ markdown2confluence
   ```
 
 - Windows
 
-  Download [the latest release](https://github.com/justmiles/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_windows_x86_64.tar.gz) and add to your system `PATH`
+  Download [the latest release](https://github.com/quinyx-tjeerd/go-markdown2confluence/releases/download/v3.3.2/go-markdown2confluence_3.3.2_windows_x86_64.tar.gz) and add to your system `PATH`
 
 ## Use with Docker
 

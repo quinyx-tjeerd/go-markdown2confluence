@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 
-	e "github.com/justmiles/go-markdown2confluence/lib/extension"
+	e "github.com/quinyx-tjeerd/go-markdown2confluence/lib/extension"
 )
 
 const (
@@ -228,7 +229,14 @@ func (m *Markdown2Confluence) Run() []error {
 			}
 
 			if m.Parent != "" {
+				id, _ := strconv.Atoi(m.Parent)
+				if id != 0 {
+					md.Ancestor = fmt.Sprintf("%d", id)
+				}
 				parents := strings.Split(m.Parent, "/")
+				for i := range parents {
+					parents[i] = strings.TrimSpace(parents[i])
+				}
 				md.Parents = append(parents, md.Parents...)
 				md.Parents = deleteEmpty(md.Parents)
 			}
@@ -252,15 +260,17 @@ func (m *Markdown2Confluence) Run() []error {
 	}
 
 	for _, markdownFile := range markdownFiles {
-
 		// Create parent pages synchronously
-		if len(markdownFile.Parents) > 0 {
+		if markdownFile.Ancestor == "" && len(markdownFile.Parents) > 0 {
 			var err error
 			markdownFile.Ancestor, err = markdownFile.FindOrCreateAncestors(m)
 			if err != nil {
 				errors = append(errors, err)
 				continue
 			}
+		}
+		if markdownFile.Ancestor != "" {
+			fmt.Println("Ancestor: " + markdownFile.Ancestor)
 		}
 
 		queue <- markdownFile
@@ -277,6 +287,7 @@ func (m *Markdown2Confluence) queueProcessor(wg *sync.WaitGroup, queue *chan Mar
 	defer wg.Done()
 
 	for markdownFile := range *queue {
+		fmt.Println("Upload: " + markdownFile.Title)
 		url, err := markdownFile.Upload(m)
 		if err != nil {
 			*errors = append(*errors, fmt.Errorf("Unable to upload markdown file %s: \n\t%s", markdownFile.Path, err))
