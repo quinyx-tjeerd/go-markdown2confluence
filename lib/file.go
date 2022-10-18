@@ -142,7 +142,7 @@ func (f *MarkdownFile) Upload(m *Markdown2Confluence) (urlPath string, err error
 func (f *MarkdownFile) FindOrCreateAncestors(m *Markdown2Confluence) (ancestorID string, err error) {
 
 	for _, parent := range f.Parents {
-		ancestorID, err = f.FindOrCreateAncestor(m, m.client, ancestorID, parent)
+		ancestorID, err = f.FindOrCreateAncestor(m, m.client, ancestorID, parent, true)
 		if err != nil {
 			return "", err
 		}
@@ -156,7 +156,7 @@ func (f *MarkdownFile) FindOrCreateAncestors(m *Markdown2Confluence) (ancestorID
 func (f *MarkdownFile) FindAncestors(m *Markdown2Confluence) (ancestorID string, err error) {
 
 	for _, parent := range f.Parents {
-		ancestorID, err = f.FindAncestor(m, m.client, ancestorID, parent, false)
+		ancestorID, err = f.FindOrCreateAncestor(m, m.client, ancestorID, parent, false)
 		if err != nil {
 			return "", err
 		}
@@ -170,7 +170,7 @@ func (f *MarkdownFile) FindAncestors(m *Markdown2Confluence) (ancestorID string,
 var ParentIndex = make(map[string]string)
 
 // FindOrCreateAncestor creates an empty page to represent a local "folder" name
-func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *confluence.Client, ancestorID, parent string, create bool = true) (string, error) {
+func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *confluence.Client, ancestorID, parent string, create bool) (string, error) {
 	if parent == "" {
 		return "", nil
 	}
@@ -199,7 +199,7 @@ func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *conf
 		return content.ID, err
 	}
 
-	if create {
+	if create != false {
 		// if parent page does not exist, create it
 		bp := confluence.CreateContentBodyParameters{}
 		bp.Title = parent
@@ -207,17 +207,17 @@ func (f *MarkdownFile) FindOrCreateAncestor(m *Markdown2Confluence, client *conf
 		bp.Space.Key = m.Space
 		bp.Body.Storage.Representation = "storage"
 		bp.Body.Storage.Value = defaultAncestorPage
-		
+
 		if m.Debug {
 			fmt.Printf("Creating parent page '%s' with ancestor id %s\n", bp.Title, ancestorID)
 		}
-		
+
 		if ancestorID != "" {
 			bp.Ancestors = append(bp.Ancestors, Ancestor{
 				ID: ancestorID,
 			})
 		}
-		
+
 		content, err := client.CreateContent(&bp, nil)
 		if err != nil {
 			return "", fmt.Errorf("Error creating parent page %s for %s: %s", f.Path, bp.Title, err)
