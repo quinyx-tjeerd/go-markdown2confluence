@@ -229,16 +229,16 @@ func (m *Markdown2Confluence) Run() []error {
 			}
 
 			if m.Parent != "" {
+				// If parent was passed as page id
 				id, _ := strconv.Atoi(m.Parent)
 				if id != 0 {
 					md.Ancestor = fmt.Sprintf("%d", id)
+				} else {
+					// Otherwise split parents
+					parents := strings.Split(m.Parent, "/")
+					md.Parents = append(parents, md.Parents...)
+					md.Parents = deleteEmpty(md.Parents)
 				}
-				parents := strings.Split(m.Parent, "/")
-				for i := range parents {
-					parents[i] = strings.TrimSpace(parents[i])
-				}
-				md.Parents = append(parents, md.Parents...)
-				md.Parents = deleteEmpty(md.Parents)
 			}
 
 			markdownFiles = append(markdownFiles, md)
@@ -269,9 +269,6 @@ func (m *Markdown2Confluence) Run() []error {
 				continue
 			}
 		}
-		if markdownFile.Ancestor != "" {
-			fmt.Println("Ancestor: " + markdownFile.Ancestor)
-		}
 
 		queue <- markdownFile
 	}
@@ -287,7 +284,6 @@ func (m *Markdown2Confluence) queueProcessor(wg *sync.WaitGroup, queue *chan Mar
 	defer wg.Done()
 
 	for markdownFile := range *queue {
-		fmt.Println("Upload: " + markdownFile.Title)
 		url, err := markdownFile.Upload(m)
 		if err != nil {
 			*errors = append(*errors, fmt.Errorf("Unable to upload markdown file %s: \n\t%s", markdownFile.Path, err))
